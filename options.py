@@ -2,7 +2,6 @@
 # -------------------------------
 # Sidebar Parameters
 # -------------------------------
-st.sidebar.header(" Simulation Parameters")
 fair_price = st.sidebar.number_input("Fair Value of Option", 20.0, 200.0, 40.0, step=1.0)
 initial_bid = st.sidebar.number_input("Initial Algo Bid", 1.0, 200.0, 20.0, step=1.0)
 initial_ask = st.sidebar.number_input("Initial Algo Ask", 1.0, 200.0, 80.0, step=1.0)
