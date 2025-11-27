@@ -1,3 +1,4 @@
+# portfolio_streamlit_app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,13 +7,15 @@ import plotly.express as px
 st.set_page_config(page_title="Portfolio Analyzer", layout="wide")
 
 st.title("📊 Simple Portfolio Analyzer — Streamlit App")
-st.markdown("""
+st.markdown(
+    """
 Upload or edit your asset allocation table, then view weighted metrics, charts and a projection of portfolio value.
 
 Assumptions:
 - "Reward (%)" is treated as expected annual return (compounded yearly) for projection.
 - "% INVESTED" should sum to 100. If not, the app will normalize the weights before projection.
-""")
+"""
+)
 
 # Default portfolio data (from the image provided)
 def get_default_df():
@@ -32,12 +35,21 @@ def get_default_df():
 
 # Sidebar inputs
 st.sidebar.header("Inputs & Settings")
-initial_investment = st.sidebar.number_input("Initial investment (₹)", min_value=0.0, value=100000.0, step=1000.0, format="%.2f")
+initial_investment = st.sidebar.number_input(
+    "Initial investment (₹)",
+    min_value=0.0,
+    value=100000.0,
+    step=1000.0,
+    format="%.2f"
+)
 projection_years = st.sidebar.slider("Projection years", min_value=1, max_value=50, value=10)
 show_individual_projection = st.sidebar.checkbox("Show individual asset projections", value=True)
 normalize_weights = st.sidebar.checkbox("Normalize % INVESTED to sum 100", value=True)
 
-uploaded_file = st.sidebar.file_uploader("Upload CSV with columns: ASSET CLASS, RISK (%), REWARD (%), TIME(YRS), % INVESTED", type=["csv"]) 
+uploaded_file = st.sidebar.file_uploader(
+    "Upload CSV with columns: ASSET CLASS, RISK (%), REWARD (%), TIME(YRS), % INVESTED",
+    type=["csv"]
+)
 
 if uploaded_file is not None:
     try:
@@ -50,7 +62,17 @@ else:
 
 # Allow user to edit table
 st.subheader("Portfolio table (editable)")
-edited_df = st.data_editor(df, num_rows="dynamic")
+# use st.data_editor when available; fall back to st.experimental_data_editor if needed
+try:
+    edited_df = st.data_editor(df, num_rows="dynamic")
+except Exception:
+    # older Streamlit versions might use different editor name
+    try:
+        edited_df = st.experimental_data_editor(df, num_rows="dynamic")
+    except Exception:
+        # final fallback: show the dataframe and use the defaults
+        st.warning("Interactive table editor isn't available in this Streamlit version. Using default table.")
+        edited_df = df.copy()
 
 # Basic validation and normalization
 if "% INVESTED" not in edited_df.columns:
@@ -70,12 +92,12 @@ else:
 # calculate weighted metrics
 risk = edited_df["RISK (%)"].astype(float)
 reward = edited_df["REWARD (%)"].astype(float)
-time = edited_df["TIME(YRS)"].astype(float)
+time_col = edited_df["TIME(YRS)"].astype(float)
 weights_fraction = weights / 100.0
 
 weighted_risk = (risk * weights_fraction).sum()
 weighted_reward = (reward * weights_fraction).sum()
-weighted_time = (time * weights_fraction).sum()
+weighted_time = (time_col * weights_fraction).sum()
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Weighted Risk (%)", f"{weighted_risk:.2f}")
@@ -87,24 +109,42 @@ st.subheader("Allocation & asset-level metrics")
 alloc_df = edited_df.copy()
 alloc_df["% INVESTED (normalized)"] = weights
 
-c1, c2 = st.columns([1,2])
+c1, c2 = st.columns([1, 2])
 with c1:
     st.write("% Invested (table)")
     st.dataframe(alloc_df.style.format({"% INVESTED (normalized)": "{:.2f}"}), height=300)
 
 with c2:
-    fig_pie = px.pie(alloc_df, names="ASSET CLASS", values="% INVESTED (normalized)", title="Portfolio Allocation")
+    fig_pie = px.pie(
+        alloc_df,
+        names="ASSET CLASS",
+        values="% INVESTED (normalized)",
+        title="Portfolio Allocation",
+        hole=0.25
+    )
     st.plotly_chart(fig_pie, use_container_width=True)
 
 # Bar charts for risk and reward
 br1, br2 = st.columns(2)
 with br1:
-    fig_risk = px.bar(alloc_df, x="ASSET CLASS", y="RISK (%)", title="Risk (%) by Asset", text_auto=True)
-    fig_risk.update_layout(xaxis_tickangle=-45, height=350)
+    fig_risk = px.bar(
+        alloc_df.sort_values("RISK (%)", ascending=False),
+        x="ASSET CLASS",
+        y="RISK (%)",
+        title="Risk (%) by Asset",
+        text="RISK (%)"
+    )
+    fig_risk.update_layout(xaxis_tickangle=-45, height=380)
     st.plotly_chart(fig_risk, use_container_width=True)
 with br2:
-    fig_reward = px.bar(alloc_df, x="ASSET CLASS", y="REWARD (%)", title="Reward (%) by Asset", text_auto=True)
-    fig_reward.update_layout(xaxis_tickangle=-45, height=350)
+    fig_reward = px.bar(
+        alloc_df.sort_values("REWARD (%)", ascending=False),
+        x="ASSET CLASS",
+        y="REWARD (%)",
+        title="Reward (%) by Asset",
+        text="REWARD (%)"
+    )
+    fig_reward.update_layout(xaxis_tickangle=-45, height=380)
     st.plotly_chart(fig_reward, use_container_width=True)
 
 # Projection section
@@ -143,18 +183,12 @@ if show_individual_projection:
 
     # stacked area chart using plotly
     indiv_long = indiv_proj_df.reset_index().melt(id_vars=["index"], var_name="Asset", value_name="Value")
-    indiv_long.rename(columns={"index":"Year"}, inplace=True)
+    indiv_long.rename(columns={"index": "Year"}, inplace=True)
     fig_area = px.area(indiv_long, x="Year", y="Value", color="Asset", title="Individual Asset Projections (stacked)")
     st.plotly_chart(fig_area, use_container_width=True)
 
 # Download options
 st.subheader("Download")
 csv = alloc_df.to_csv(index=False).encode("utf-8")
-st.download_button("Download allocation as CSV", data=csv, file_name="allocation.csv", mime="text/csv")
+st.download_button("Download allo_
 
-# Save projection to CSV for users who want to download it
-proj_csv = proj_df.to_csv(index=False).encode("utf-8")
-st.download_button("Download portfolio projection (years) as CSV", data=proj_csv, file_name="portfolio_projection.csv", mime="text/csv")
-
-st.markdown("---")
-st.write("How to use: edit the table or upload your CSV, tweak inputs from the sidebar and then download results.\n\nIf you want enhancements (Monte Carlo, risk-adjusted returns, inflation, or monthly contributions), tell me what you'd like next!")
