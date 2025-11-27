@@ -45,3 +45,31 @@ plt.ylabel("Price (₹)")
 plt.legend()
 plt.grid(True)
 plt.show()
+File "/mount/src/opt/last.py", line 37, in <module>
+    plt.plot(steps, algo_prices, label='Algo Buy Price', color='green', marker='o')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/adminuser/venv/lib/python3.13/site-packages/matplotlib/pyplot.py", line 3838, in plot
+    return gca().plot(
+           ~~~~~~~~~~^
+        *args,
+        ^^^^^^
+    ...<3 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+File "/home/adminuser/venv/lib/python3.13/site-packages/matplotlib/axes/_axes.py", line 1777, in plot
+    lines = [*self._get_lines(self, *args, data=data, **kwargs)]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/adminuser/venv/lib/python3.13/site-packages/matplotlib/axes/_base.py", line 297, in __call__
+    yield from self._plot_args(
+               ~~~~~~~~~~~~~~~^
+        axes, this, kwargs, ambiguous_fmt_datakey=ambiguous_fmt_datakey,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        return_kwargs=return_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+File "/home/adminuser/venv/lib/python3.13/site-packages/matplotlib/axes/_base.py", line 494, in _plot_args
+    raise ValueError(f"x and y must have same first dimension, but "
+                     f"have shapes {x.shape} and {y.shape}")
